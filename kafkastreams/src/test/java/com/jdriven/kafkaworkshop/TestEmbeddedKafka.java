@@ -5,8 +5,8 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
+//import org.apache.kafka.connect.json.JsonDeserializer;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -14,6 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
+import org.springframework.kafka.support.serializer.JsonDeserializer;
 import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
@@ -47,8 +48,9 @@ public class TestEmbeddedKafka {
     // put our test consumer in a separate consumer group
     Map<String, Object> consumerProps = KafkaTestUtils.consumerProps(brokerAddress, "group", "false");
     consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
+    consumerProps.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, JsonDeserializer.class);
     DefaultKafkaConsumerFactory<String, SensorData> cf =
-        new DefaultKafkaConsumerFactory<>(consumerProps);
+        new DefaultKafkaConsumerFactory<>(consumerProps, new StringDeserializer(), new JsonDeserializer(SensorData.class));
     consumer = cf.createConsumer();
     embeddedKafka.consumeFromAllEmbeddedTopics(consumer);
   }
@@ -78,7 +80,10 @@ public class TestEmbeddedKafka {
 
     ConsumerRecord<String, SensorData> singleRecord = KafkaTestUtils.getSingleRecord(consumer, TopicNames.RECEIVED_SENSOR_DATA);
     assertThat(singleRecord.key(), is(sensorData.getId()));
+    assertThat(singleRecord.value(), is(sensorData));
     log.info(singleRecord.toString());
+    log.info("key: {}", singleRecord.key());
+    log.info("value: {}", singleRecord.value().toString());
   }
 
 }
