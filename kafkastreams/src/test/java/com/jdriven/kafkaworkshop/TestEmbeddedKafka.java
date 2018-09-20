@@ -44,6 +44,7 @@ public class TestEmbeddedKafka {
 
   @Before
   public void setuplistener() throws Exception {
+    // put our test consumer in a separate consumer group
     Map<String, Object> consumerProps = KafkaTestUtils.consumerProps(brokerAddress, "group", "false");
     consumerProps.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, StringDeserializer.class);
     DefaultKafkaConsumerFactory<String, SensorData> cf =
@@ -54,7 +55,8 @@ public class TestEmbeddedKafka {
 
   @After
   public void shutdownKafka() {
-    log.info("shuttng down");
+    // this prevents FileNotFoundException stack traces in the log
+    log.info("shutting down");
     embeddedKafka.getKafkaServers().forEach(broker -> broker.shutdown());
     embeddedKafka.getKafkaServers().forEach(broker -> broker.awaitShutdown());
   }
