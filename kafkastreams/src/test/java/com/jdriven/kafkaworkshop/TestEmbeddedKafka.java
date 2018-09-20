@@ -1,11 +1,11 @@
 package com.jdriven.kafkaworkshop;
 
+import kafka.server.KafkaServer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
-//import org.apache.kafka.connect.json.JsonDeserializer;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -59,10 +59,9 @@ public class TestEmbeddedKafka {
   public void shutdownKafka() {
     // this prevents FileNotFoundException stack traces in the log
     log.info("shutting down");
-    embeddedKafka.getKafkaServers().forEach(broker -> broker.shutdown());
-    embeddedKafka.getKafkaServers().forEach(broker -> broker.awaitShutdown());
+    embeddedKafka.getKafkaServers().forEach(KafkaServer::shutdown);
+    embeddedKafka.getKafkaServers().forEach(KafkaServer::awaitShutdown);
   }
-
 
   @Test
   public void tryout() throws Exception {
@@ -81,9 +80,6 @@ public class TestEmbeddedKafka {
     ConsumerRecord<String, SensorData> singleRecord = KafkaTestUtils.getSingleRecord(consumer, TopicNames.RECEIVED_SENSOR_DATA);
     assertThat(singleRecord.key(), is(sensorData.getId()));
     assertThat(singleRecord.value(), is(sensorData));
-    log.info(singleRecord.toString());
-    log.info("key: {}", singleRecord.key());
-    log.info("value: {}", singleRecord.value().toString());
   }
 
 }
