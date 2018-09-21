@@ -6,8 +6,9 @@ import org.apache.kafka.clients.consumer.Consumer;
 import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.apache.kafka.common.serialization.StringDeserializer;
-import org.junit.After;
+import org.junit.AfterClass;
 import org.junit.Before;
+import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,7 +16,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.kafka.core.DefaultKafkaConsumerFactory;
 import org.springframework.kafka.support.serializer.JsonDeserializer;
-import org.springframework.kafka.test.context.EmbeddedKafka;
 import org.springframework.kafka.test.rule.KafkaEmbedded;
 import org.springframework.kafka.test.utils.KafkaTestUtils;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -28,7 +28,6 @@ import static org.junit.Assert.assertThat;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
-@EmbeddedKafka(topics = TopicNames.RECEIVED_SENSOR_DATA)
 @Slf4j
 public class TestEmbeddedKafka {
 
@@ -38,8 +37,8 @@ public class TestEmbeddedKafka {
   @Autowired
   private SensorController sensorController;
 
-  @Autowired
-  private KafkaEmbedded embeddedKafka;
+  @ClassRule
+  public static KafkaEmbedded embeddedKafka = new KafkaEmbedded(1, true, TopicNames.RECEIVED_SENSOR_DATA);
 
   Consumer<String, SensorData> consumer;
 
@@ -55,8 +54,8 @@ public class TestEmbeddedKafka {
     embeddedKafka.consumeFromAllEmbeddedTopics(consumer);
   }
 
-  @After
-  public void shutdownKafka() {
+  @AfterClass
+  public static void shutdownKafka() {
     // this prevents FileNotFoundException stack traces in the log
     log.info("shutting down");
     embeddedKafka.getKafkaServers().forEach(KafkaServer::shutdown);
